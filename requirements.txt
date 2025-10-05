@@ -1,4 +1,4 @@
 Flask==2.3.3
-selenium==4.15.0
 gunicorn==21.2.0
-selenium-chrome-aws-lambda==2.2.2
+selenium==4.15.0
+chrome-for-lambda-selenium==1.1.0
