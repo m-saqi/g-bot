@@ -11,7 +11,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException, WebDriverException
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 from fake_useragent import UserAgent
+
 
 # Configure logging
 logging.basicConfig(
@@ -26,57 +29,52 @@ class SearchBot:
         self.setup_complete = False
         
     def setup_driver(self):
-        """Setup Chrome driver with professional configuration"""
-        try:
-            chrome_options = Options()
-            
-            # Basic options
-            chrome_options.add_argument('--no-sandbox')
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            chrome_options.add_argument('--disable-gpu')
-            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-            
-            # Stealth options
-            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            chrome_options.add_experimental_option('useAutomationExtension', False)
-            
-            # Performance options
-            chrome_options.add_argument('--disable-extensions')
-            chrome_options.add_argument('--disable-plugins')
-            chrome_options.add_argument('--disable-background-timer-throttling')
-            chrome_options.add_argument('--disable-backgrounding-occluded-windows')
-            chrome_options.add_argument('--disable-renderer-backgrounding')
-            
-            # Random viewport
-            width = random.randint(1200, 1920)
-            height = random.randint(800, 1080)
-            chrome_options.add_argument(f'--window-size={width},{height}')
-            
-            # Random user agent
-            user_agent = self.ua.random
-            chrome_options.add_argument(f'--user-agent={user_agent}')
-            
-            # Headless mode for production
-            if os.environ.get('PRODUCTION', 'false').lower() == 'true':
-                chrome_options.add_argument('--headless=new')
-            
-            # Set ChromeDriver path
-            chromedriver_path = os.path.join(os.path.dirname(__file__), 'chromedriver', 'chromedriver')
-            if os.path.exists(chromedriver_path):
-                driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
-            else:
-                driver = webdriver.Chrome(options=chrome_options)
-            
-            # Additional stealth
-            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": user_agent})
-            
-            self.setup_complete = True
-            return driver
-            
-        except Exception as e:
-            logger.error(f"Driver setup failed: {str(e)}")
-            raise
+     """Setup Chrome driver with professional configuration"""
+     try:
+         chrome_options = Options()
+         
+         # Basic options
+         chrome_options.add_argument('--no-sandbox')
+         chrome_options.add_argument('--disable-dev-shm-usage')
+         chrome_options.add_argument('--disable-gpu')
+         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+         
+         # Stealth options
+         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+         chrome_options.add_experimental_option('useAutomationExtension', False)
+         
+         # Performance options
+         chrome_options.add_argument('--disable-extensions')
+         chrome_options.add_argument('--disable-plugins')
+         chrome_options.add_argument('--disable-background-timer-throttling')
+         chrome_options.add_argument('--disable-backgrounding-occluded-windows')
+         chrome_options.add_argument('--disable-renderer-backgrounding')
+         
+         # Always run headless on production
+         chrome_options.add_argument('--headless=new')
+         
+         # Random viewport
+         width = random.randint(1200, 1920)
+         height = random.randint(800, 1080)
+         chrome_options.add_argument(f'--window-size={width},{height}')
+         
+         # Random user agent
+         user_agent = self.ua.random
+         chrome_options.add_argument(f'--user-agent={user_agent}')
+         
+         # Use webdriver-manager to handle the driver
+         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+         
+         # Additional stealth
+         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": user_agent})
+         
+         self.setup_complete = True
+         return driver
+         
+     except Exception as e:
+         logger.error(f"Driver setup failed: {str(e)}")
+         raise
 
     def human_delay(self, min_seconds=1, max_seconds=4):
         """Realistic human delay with random variation"""
@@ -184,22 +182,16 @@ class SearchBot:
                 search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
                 driver.get(search_url)
                 
-                # Wait for results with multiple selectors
-                selectors = ["div.g", "#search", ".g", "[data-sokoban-container]"]
-                for selector in selectors:
-                    try:
-                        WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, selector))
-                        )
-                        break
-                    except TimeoutException:
-                        continue
+                # Wait for results with a more reliable selector
+                WebDriverWait(driver, 15).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "div[jscontroller='SC7lYd']"))
+                )
                 
                 self.human_delay(2, 4)
                 
-                # Find target link
-                links = driver.find_elements(By.CSS_SELECTOR, "div.g a")
-                for i, link in enumerate(links[:8]):  # Check first 8 results
+                # Find target link using a more specific selector
+                links = driver.find_elements(By.CSS_SELECTOR, "a[jsname='UWckNb']")
+                for i, link in enumerate(links[:10]):  # Check first 10 results
                     try:
                         href = link.get_attribute('href')
                         if href and target_domain in href:
@@ -215,7 +207,7 @@ class SearchBot:
                         logger.warning(f"Error checking link {i}: {str(e)}")
                         continue
                 
-                # If not found, retry with different approach
+                # If not found, retry
                 if attempt < max_retries - 1:
                     logger.info(f"Target not found, retrying... ({attempt + 1}/{max_retries})")
                     self.human_delay(3, 6)
@@ -440,3 +432,4 @@ if __name__ == '__main__':
     debug = os.environ.get('DEBUG', 'false').lower() == 'true'
 
     app.run(host='0.0.0.0', port=port, debug=debug)
+
