@@ -2,12 +2,13 @@ import os
 import time
 import logging
 from flask import Flask, request, jsonify, render_template
+
+# Import the modern, maintained library
+from cfl_selenium import SChromeDriver
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
-# Import the specialized library for running Chrome on Vercel/AWS Lambda
-from selenium_chrome_aws_lambda import SChromeDriver
 
 # --- Professional Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -17,17 +18,16 @@ class SearchBot:
 
     def setup_driver(self):
         """
-        This is the professional way to set up a Selenium driver for Vercel.
-        It uses a pre-compiled, serverless-compatible version of Chromium.
+        This function now uses the cfl_selenium library (chrome-for-lambda-selenium),
+        which is the modern standard for running Selenium on Vercel.
         """
         try:
-            # The SChromeDriver object handles all the complex setup automatically.
-            # It points Selenium to the correct browser binary and driver.
+            # SChromeDriver from the new library handles all setup automatically.
             driver = SChromeDriver()
-            logger.info("SChromeDriver setup successful.")
+            logger.info("SChromeDriver setup successful using cfl_selenium.")
             return driver
         except Exception as e:
-            logger.error(f"FATAL: Driver setup failed. This is likely an environment issue. Error: {str(e)}")
+            logger.error(f"FATAL: Driver setup failed. Error: {str(e)}")
             raise
 
     def find_and_click_link(self, driver, target_domain):
@@ -35,16 +35,15 @@ class SearchBot:
         Finds and clicks the target link using a robust selector.
         """
         try:
-            # This selector finds the clickable h3 title of a search result. It's more stable.
+            # This selector finds the clickable h3 title of a search result.
             links = driver.find_elements(By.CSS_SELECTOR, "a > h3")
             
-            for i, link in enumerate(links[:10]):  # Check top 10 results
+            for i, link in enumerate(links[:10]):
                 parent_a_tag = link.find_element(By.XPATH, "..")
                 href = parent_a_tag.get_attribute('href')
                 
                 if href and target_domain in href:
                     logger.info(f"Target '{target_domain}' found at position {i + 1}: {href}")
-                    # A direct click is more reliable than simulated movements.
                     parent_a_tag.click()
                     return href, i + 1
                     
@@ -82,9 +81,8 @@ class SearchBot:
                 raise Exception(f"Could not find a link for '{target_domain}' on the search results page.")
             result['steps'][-1]['status'] = 'Completed'
 
-            # Step 4: Confirm Navigation and Finalize
+            # Step 4: Confirm Navigation
             result['steps'].append({'step': 'Confirming Navigation', 'status': 'In Progress'})
-            # Wait until the URL changes to something other than google.com
             WebDriverWait(driver, 15).until(lambda d: "google.com" not in d.current_url)
             logger.info(f"Successfully navigated to: {driver.current_url}")
             result['steps'][-1]['status'] = 'Completed'
@@ -137,4 +135,4 @@ def api_search():
         
     except Exception as e:
         logger.critical(f"A critical error occurred in the API endpoint: {str(e)}")
-        return jsonify({'success': False, 'error': 'Internal Server Error. Check the Vercel logs for more details.'}), 500
+        return jsonify({'success': False, 'error': 'Internal Server Error. Check the Vercel logs for details.'}), 500
