@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Google Search Bot</title>
+    <meta name="description" content="Advanced Google Search Bot with human-like behavior simulation">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔍 Professional Search Bot</h1>
+            <p>Advanced Google search automation with human-like behavior simulation</p>
+            <div class="status-indicator online" id="statusIndicator" title="Server: Online"></div>
+        </header>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <div class="main-content">
+            <!-- Main Content -->
+            <div class="main-panel">
+                <!-- Search Form Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon">⚡</div>
+                        <h2>Search Configuration</h2>
+                    </div>
+                    
+                    <form id="searchForm">
+                        <div class="form-group">
+                            <label class="form-label" for="searchQuery">Search Query</label>
+                            <input type="text" id="searchQuery" class="form-input" 
+                                   placeholder="Enter what to search on Google..." 
+                                   value="uaf cgpa calculator" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="targetWebsite">Target Website</label>
+                            <input type="text" id="targetWebsite" class="form-input" 
+                                   placeholder="Enter website domain to visit..." 
+                                   value="uafcgpacalculator.vercel.app" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="scrollDuration">Scroll Duration</label>
+                                <input type="number" id="scrollDuration" class="form-input" 
+                                       value="8" min="3" max="30" required>
+                                <small class="text-secondary">Seconds (3-30)</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Expected Time</label>
+                                <div class="form-input" style="background: #f8fafc; color: var(--text-secondary);">
+                                    ≈ 20-40 seconds
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="startBtn" class="btn btn-primary">
+                            <i class="icon-search"></i> Start Search & Visit
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="card hidden">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <h3>Processing Your Search</h3>
+                        <p>This may take 20-40 seconds. Please don't close this page.</p>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+
+                        <div class="loading-steps">
+                            <div class="loading-step active">
+                                <div class="step-icon">1</div>
+                                <div>
+                                    <div class="step-title">Initializing Browser</div>
+                                    <div class="step-details">Setting up stealth configuration</div>
+                                </div>
+                            </div>
+                            
+                            <div class="loading-step">
+                                <div class="step-icon">2</div>
+                                <div>
+                                    <div class="step-title">Executing Google Search</div>
+                                    <div class="step-details">Finding target website in results</div>
+                                </div>
+                            </div>
+                            
+                            <div class="loading-step">
+                                <div class="step-icon">3</div>
+                                <div>
+                                    <div class="step-title">Loading Target Website</div>
+                                    <div class="step-details">Waiting for page to load completely</div>
+                                </div>
+                            </div>
+                            
+                            <div class="loading-step">
+                                <div class="step-icon">4</div>
+                                <div>
+                                    <div class="step-title">Simulating Human Behavior</div>
+                                    <div class="step-details">Realistic scrolling and interactions</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Container -->
+                <div id="resultsContainer" class="results-container">
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+
+            <!-- Sidebar Stats -->
+            <div class="stats-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon">📊</div>
+                        <h2>Statistics</h2>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalSearches">0</span>
+                            <span class="stat-label">Total Searches</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="successRate">0%</span>
+                            <span class="stat-label">Success Rate</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="avgTime">0s</span>
+                            <span class="stat-label">Avg. Time</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="uptime">100%</span>
+                            <span class="stat-label">Uptime</span>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>🛡️ Privacy & Ethics</h3>
+                        <p>This tool is designed for legitimate testing and research purposes only.</p>
+                        <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                            <li>Respects robots.txt</li>
+                            <li>Includes human-like delays</li>
+                            <li>Uses ethical scraping practices</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>⚙️ Features</h3>
+                        <ul style="margin-left: 1rem;">
+                            <li>Stealth browser automation</li>
+                            <li>Human-like behavior simulation</li>
+                            <li>Advanced error handling</li>
+                            <li>Real-time progress tracking</li>
+                            <li>Comprehensive analytics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
